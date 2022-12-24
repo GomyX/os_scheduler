@@ -33,7 +33,7 @@
      return s;
      
 }  
-
+bool check_if_proc_finished =true ;
 
 //---------------------------------------------------------------
 
@@ -89,9 +89,36 @@ process eq_st(process p,msgbuff message){
     return p;
 }
 
+void fork_process(char* rem_time){
+
+    int pid;
+    pid= fork();
+    if (pid ==0)
+    {
+        printf("process has been forked \n");
+        char *args[]= {"./process.out",rem_time,NULL};
+        execv(args[0],args);
+        printf("prpcess fork didn'twork");
+    }
+    else{
+        int status;
+        int e;
+        pid = wait(&status);
+        if(!(status & 0x00FF)){
+            printf("\nA p1 with pid %d terminated with exit code %d\n", pid, WEXITSTATUS(status));
+            if(WEXITSTATUS(status)==9){
+                printf("success%d",WEXITSTATUS(status));
+                check_if_proc_finished=true;
+                
+            }
+        }
+    }   
+}
+
 
 int main(int argc, char * argv[])
 {
+    heap_t *readyq_sjf = (heap_t *)calloc(1, sizeof(heap_t));
 
     //----------------  some inititalizations  --------------------
     initClk();
@@ -104,24 +131,8 @@ int main(int argc, char * argv[])
     downQ=msgget(key_down, IPC_CREAT | 0644);
     msgbuff message; 
     process p;
-//---------------------------------
-    heap_t *readyq_sjf = (heap_t *)calloc(1, sizeof(heap_t));
-//----------------------------------
-void fork_process(char* rem_time){
 
-    int pid;
-    pid= fork();
-    if (pid ==0)
-    {
-        printf("process has been forked \n");
-        char *args[]= {"./process.out",rem_time,NULL};
-        execv(args[0],args);
-        printf("didn'twork");
-    }
-    // else{
-    //     wait()
-    // }
-}
+
 
     while (1)
     {
@@ -131,7 +142,7 @@ void fork_process(char* rem_time){
             perror("msg not recieved");
         }
         else{
-        //push(readyq_sjf,p.ArrTime,&p[i]);
+            //push(readyq_sjf,p.ArrTime,&p[i]);
             printf("message recieved\n");
             printf("clk is %d\n ",getClk());
             process p=eq_st(p,message);
@@ -140,7 +151,10 @@ void fork_process(char* rem_time){
             push(readyq_sjf,p.RunTime,&p);
             while(readyq_sjf->len){
                 process pf =*pop(readyq_sjf);
-                fork_process(itoa(pf.RunTime,snum));
+                if( check_if_proc_finished){
+                    printf("phg has finished at %d\n",getClk());
+                    fork_process(itoa(pf.RunTime,snum));
+                }
             }
 
     
@@ -148,7 +162,7 @@ void fork_process(char* rem_time){
 
             //printf("run time of p1 %d\n",P_to_fork.RunTime);
         }
-            printf("run time of p %d\n",top(readyq_sjf)->RunTime);
+            //printf("run time of p %d\n",top(readyq_sjf)->RunTime);
 
     
  
