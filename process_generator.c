@@ -135,7 +135,7 @@ int fork_schedular()
          {
         printf("check :%d",pid);
         char *args[]= {"./scheduler.out",get_algo_num(),NULL};
-        execl("/home/thabet/Desktop/os_project/OS_Starter_Code/scheduler.out","scheduler.out",get_algo_num(),NULL);
+        execl("/home/thabet/Desktop/os_project/OS_Starter_Code/os/scheduler.out","scheduler.out",get_algo_num(),NULL);
         perror("Error in execv'ing to scheduler");
         exit(EXIT_FAILURE);
 
